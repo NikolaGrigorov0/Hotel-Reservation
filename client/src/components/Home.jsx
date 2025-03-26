@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FaSearch, FaCalendarAlt, FaUser, FaStar, FaWifi, FaSwimmingPool, FaParking, FaUtensils } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 
 const HomePage = () => {
@@ -73,7 +74,7 @@ const HomePage = () => {
                 <FaSearch className="absolute left-3 top-3.5 text-blue-400" />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-blue-800 mb-1">Check-in</label>
               <div className="relative">
@@ -86,7 +87,7 @@ const HomePage = () => {
                 <FaCalendarAlt className="absolute left-3 top-3.5 text-blue-400" />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-blue-800 mb-1">Check-out</label>
               <div className="relative">
@@ -99,7 +100,7 @@ const HomePage = () => {
                 <FaCalendarAlt className="absolute left-3 top-3.5 text-blue-400" />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-blue-800 mb-1">Guests</label>
               <div className="relative">
@@ -114,9 +115,15 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-          <button className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 shadow-md hover:shadow-lg">
+          <Link
+            to={{
+              pathname: "/search",
+              search: `?destination=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
+            }}
+            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition duration-300 shadow-md hover:shadow-lg text-center block"
+          >
             Search Hotels
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -128,9 +135,9 @@ const HomePage = () => {
           {featuredHotels.map((hotel) => (
             <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group">
               <div className="h-60 overflow-hidden relative">
-                <img 
-                  src={hotel.image} 
-                  alt={hotel.name} 
+                <img
+                  src={hotel.image}
+                  alt={hotel.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
                 <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
