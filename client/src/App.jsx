@@ -20,23 +20,36 @@ function App() {
               </Link>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex space-x-6">
-                <Link to="/" className="hover:text-blue-200 transition duration-300">
-                  Home
-                </Link>
-                <Link to="/hotels" className="hover:text-blue-200 transition duration-300">
-                  Hotels
-                </Link>
-                <Link to="/about" className="hover:text-blue-200 transition duration-300">
-                  About
-                </Link>
-                <Link to="/contact" className="hover:text-blue-200 transition duration-300">
-                  Contact
-                </Link>
+              <div className="hidden md:flex items-center">
+                {/* Centered navigation links with absolute positioning */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 flex space-x-6">
+                  <Link to="/" className="hover:text-blue-200 transition duration-300">
+                    Home
+                  </Link>
+                  <Link to="/hotels" className="hover:text-blue-200 transition duration-300">
+                    Hotels
+                  </Link>
+                  <Link to="/about" className="hover:text-blue-200 transition duration-300">
+                    About
+                  </Link>
+                  <Link to="/contact" className="hover:text-blue-200 transition duration-300">
+                    Contact
+                  </Link>
+                </div>
+
+                {/* Right-aligned auth links */}
+                <div className="ml-auto flex space-x-6">
+                  <Link to="/signUp" className="hover:text-blue-200 transition duration-300">
+                    Sign Up
+                  </Link>
+                  <Link to="/signIn" className="hover:text-blue-200 transition duration-300">
+                    Sign In
+                  </Link>
+                </div>
               </div>
               {/* Mobile menu button */}
               <div className="md:hidden">
-                <button 
+                <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="text-white focus:outline-none"
                 >
@@ -54,33 +67,47 @@ function App() {
             {/* Mobile Navigation */}
             {isMenuOpen && (
               <div className="md:hidden mt-4 pb-4 space-y-3">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Home
                 </Link>
-                <Link 
-                  to="/hotels" 
+                <Link
+                  to="/hotels"
                   className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Hotels
                 </Link>
-                <Link 
-                  to="/about" 
+                <Link
+                  to="/about"
                   className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   About
                 </Link>
-                <Link 
-                  to="/contact" 
+                <Link
+                  to="/contact"
                   className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Contact
+                </Link>
+                <Link
+                  to="/signUp"
+                  className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  to="/signIn"
+                  className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
                 </Link>
               </div>
             )}
