@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import HomePage from './components/Home';
 import SearchBarWithMap from './components/SearchBarWithMap';
+import SignIn from './components/SignIn';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -119,6 +120,8 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchBarWithMap />} />
+            <Route path="/signIn" element={<SignIn />} /> 
+            <Route path="/signUp" element={<HomePage />} />
           </Routes>
         </main>
 
