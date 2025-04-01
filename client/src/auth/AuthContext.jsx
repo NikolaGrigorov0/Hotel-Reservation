@@ -45,23 +45,29 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (email, password) => {
+  const register = async (username, email, password) => {
     try {
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, email, password }),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
       }
+  
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      const decoded = jwtDecode(data.token);
+      setUser(decoded);
       return true;
     } catch (error) {
       console.error('Registration error:', error);
-      return false;
+      throw error;
     }
   };
 

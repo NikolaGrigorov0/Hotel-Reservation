@@ -4,6 +4,7 @@ import './App.css';
 import HomePage from './components/Home';
 import SearchBarWithMap from './components/SearchBarWithMap';
 import SignIn from './components/SignIn';
+import SignUp from './components/SignUp';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -121,7 +122,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/search" element={<SearchBarWithMap />} />
             <Route path="/signIn" element={<SignIn />} /> 
-            <Route path="/signUp" element={<HomePage />} />
+            <Route path="/signUp" element={<SignUp />} />
           </Routes>
         </main>
 
