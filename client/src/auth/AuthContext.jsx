@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('http://localhost:5088/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
 
   const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('http://localhost:5088/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,10 +60,9 @@ export function AuthProvider({ children }) {
         throw new Error(errorData.message || 'Registration failed');
       }
   
+      // Parse response only once
       const data = await response.json();
-      localStorage.setItem('token', data.token);
-      const decoded = jwtDecode(data.token);
-      setUser(decoded);
+      // Don't store token after registration, let them login instead
       return true;
     } catch (error) {
       console.error('Registration error:', error);

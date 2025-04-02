@@ -3,66 +3,146 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MongoDB.Driver;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 
-// Create the web application builder
 var builder = WebApplication.CreateBuilder(args);
 
+// Add configuration from appsettings.json and environment variables
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
 // Add services to the container
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
-// Register MongoDB services
-var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDb");
-var mongoDbName = builder.Configuration["DatabaseName"];
-
-builder.Services.AddSingleton<IMongoClient>(sp =>
-    new MongoClient(mongoDbConnectionString));
-builder.Services.AddSingleton<IMongoDatabase>(sp =>
-    sp.GetRequiredService<IMongoClient>().GetDatabase(mongoDbName));
-
-// JWT Authentication
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Configure Swagger with JWT support
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Reservation API", Version = "v1" });
+    
+    // Add JWT Authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidateAudience = false,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"]
-        };
+        Description = "JWT Authorization header using the Bearer scheme",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
     });
+    
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
-// CORS
+// MongoDB Configuration
+var mongoDbSettings = builder.Configuration.GetSection("MongoDbSettings");
+builder.Services.AddSingleton<IMongoClient>(serviceProvider => 
+{
+    var connectionString = mongoDbSettings["ConnectionString"];
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("MongoDB connection string is not configured.");
+    }
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped<IMongoDatabase>(serviceProvider =>
+{
+    var client = serviceProvider.GetRequiredService<IMongoClient>();
+    var databaseName = mongoDbSettings["DatabaseName"];
+    if (string.IsNullOrEmpty(databaseName))
+    {
+        throw new InvalidOperationException("MongoDB database name is not configured.");
+    }
+    return client.GetDatabase(databaseName);
+});
+
+// JWT Authentication Configuration
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+    
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// CORS Configuration (more restrictive in production)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+        
+        if (builder.Environment.IsDevelopment())
         {
             policy.AllowAnyOrigin()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
-        });
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
 });
-
-// Controllers and Swagger
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware
-app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotel Reservation API v1");
+    });
 }
+
+app.UseHttpsRedirection();
+app.UseCors("CorsPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
