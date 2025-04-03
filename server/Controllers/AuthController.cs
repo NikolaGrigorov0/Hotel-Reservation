@@ -30,12 +30,13 @@ namespace HotelReservation.Controllers
         public async Task<IActionResult> Register(UserRegisterDto request)
         {
             if (await _users.Find(u => u.Email == request.Email).AnyAsync())
-                return BadRequest("User already exists.");
+                return BadRequest(new { message = "User already exists." });
 
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             var user = new User
             {
+                Username = request.Username,
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt
@@ -43,7 +44,10 @@ namespace HotelReservation.Controllers
 
             await _users.InsertOneAsync(user);
 
-            return Ok("User successfully created!");
+            // Generate token for the newly registered user, just like login
+            string token = CreateToken(user);
+
+            return Ok(new { token });
         }
 
         [HttpPost("login")]
@@ -70,11 +74,12 @@ namespace HotelReservation.Controllers
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value));
+                _configuration.GetSection("JwtSettings:Key").Value));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var token = new JwtSecurityToken(
+                issuer: _configuration.GetSection("JwtSettings:Issuer").Value,
                 claims: claims,
                 expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);
@@ -105,6 +110,7 @@ namespace HotelReservation.Controllers
 
     public class UserRegisterDto
     {
+        public string Username { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
     }
