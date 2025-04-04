@@ -1,40 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSearch, FaCalendarAlt, FaUser, FaStar, FaWifi, FaSwimmingPool, FaParking, FaUtensils } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-
+import { hotelService } from '../services/hotelService';
 
 const HomePage = () => {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
   const [destination, setDestination] = useState('');
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const featuredHotels = [
-    {
-      id: 1,
-      name: "Dominion Hotel",
-      location: "New York, USA",
-      price: 250,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa",
-    },
-    {
-      id: 2,
-      name: "Tropical Paradise Resort",
-      location: "Bali, Indonesia",
-      price: 180,
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-    },
-    {
-      id: 3,
-      name: "Mountain View Lodge",
-      location: "Swiss Alps, Switzerland",
-      price: 210,
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
-    },
-  ];
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        setLoading(true);
+        const data = await hotelService.getAllHotels();
+        const formattedHotels = data.map(hotel => ({
+          id: hotel._id,
+          name: hotel.basicInfo.name,
+          location: `${hotel.location.city}, ${hotel.location.country}`,
+          price: hotel.rooms[0]?.pricePerNight || 0,
+          rating: hotel.basicInfo.stars,
+          image: hotel.basicInfo.images[0] || 'https://via.placeholder.com/300x200',
+          coordinates: hotel.location.coordinates
+        }));
+        setHotels(formattedHotels);
+      } catch (err) {
+        setError('Failed to fetch hotels');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotels();
+  }, []);
+
+  const filteredHotels = hotels.filter(hotel =>
+    hotel.location.toLowerCase().includes(destination.toLowerCase()) ||
+    hotel.name.toLowerCase().includes(destination.toLowerCase())
+  );
 
   const amenities = [
     { icon: <FaWifi className="text-2xl" />, name: "Free WiFi" },
@@ -42,6 +49,9 @@ const HomePage = () => {
     { icon: <FaParking className="text-2xl" />, name: "Free Parking" },
     { icon: <FaUtensils className="text-2xl" />, name: "Restaurant" },
   ];
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -132,7 +142,7 @@ const HomePage = () => {
         <h2 className="text-3xl font-bold text-center mb-4 text-blue-900">Featured Hotels</h2>
         <p className="text-center text-blue-600 mb-12">Discover our most popular destinations</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredHotels.map((hotel) => (
+          {filteredHotels.slice(0, 3).map((hotel) => (
             <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group">
               <div className="h-60 overflow-hidden relative">
                 <img
@@ -153,9 +163,15 @@ const HomePage = () => {
                   </div>
                 </div>
                 <p className="text-blue-600 mb-4">{hotel.location}</p>
-                <button className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg font-medium transition duration-300">
+                <Link
+                  to={{
+                    pathname: "/search",
+                    search: `?destination=${encodeURIComponent(hotel.location)}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
+                  }}
+                  className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg font-medium transition duration-300 block text-center"
+                >
                   View Details
-                </button>
+                </Link>
               </div>
             </div>
           ))}
@@ -183,9 +199,12 @@ const HomePage = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready for an unforgettable experience?</h2>
           <p className="text-xl mb-8 text-blue-100">Join thousands of satisfied guests who've enjoyed our premium hospitality</p>
-          <button className="bg-white text-blue-800 hover:bg-blue-100 py-3 px-8 rounded-lg font-bold text-lg transition duration-300 shadow-lg hover:shadow-xl">
+          <Link
+            to="/search"
+            className="inline-block bg-white text-blue-800 hover:bg-blue-100 py-3 px-8 rounded-lg font-bold text-lg transition duration-300 shadow-lg hover:shadow-xl"
+          >
             Book Your Stay Now
-          </button>
+          </Link>
         </div>
       </div>
     </div>

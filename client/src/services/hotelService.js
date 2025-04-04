@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5088/api/hotels';
+const API_URL = 'http://localhost:5088/api/hotel';
 
 export const hotelService = {
   getAllHotels: async () => {
