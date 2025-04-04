@@ -3,6 +3,8 @@ import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
+import { hotelService } from '../services/hotelService';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -15,91 +17,48 @@ const SearchResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const destination = searchParams.get('destination') || '';
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
   const guests = searchParams.get('guests') || '1';
 
-  const hotels = [
-    {
-      id: 1,
-      name: "Dominion Hotel",
-      location: "New York, USA",
-      price: 250,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa",
-      coordinates: [40.7128, -74.0060],
-    },
-    {
-      id: 2,
-      name: "Tropical Paradise Resort",
-      location: "Bali, Indonesia",
-      price: 180,
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-      coordinates: [-8.4095, 115.1889],
-    },
-    {
-      id: 3,
-      name: "Mountain View Lodge",
-      location: "Swiss Alps, Switzerland",
-      price: 210,
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
-      coordinates: [46.8182, 8.2275],
-    },
-    {
-      id: 4,
-      name: "Bali Sunset Villas",
-      location: "Bali, Indonesia",
-      price: 260,
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1586201375761-83865001e26c",
-      coordinates: [-8.5005, 115.1325],
-    },
-    {
-      id: 5,
-      name: "Seaside Retreat",
-      location: "Santorini, Greece",
-      price: 275,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1605276374104-dee2a0edebdb",
-      coordinates: [36.3932, 25.4615],
-    },
-    {
-      id: 6,
-      name: "Blue Lagoon Hotel",
-      location: "Athens, Greece",
-      price: 230,
-      rating: 4.5,
-      image: "https://images.unsplash.com/photo-1570219136620-07e0deaea2d5",
-      coordinates: [37.9838, 23.7275],
-    },
-    {
-      id: 7,
-      name: "Skyline Hotel",
-      location: "Tokyo, Japan",
-      price: 300,
-      rating: 4.6,
-      image: "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d",
-      coordinates: [35.682839, 139.759455],
-    },
-    {
-      id: 8,
-      name: "Cherry Blossom Resort",
-      location: "Kyoto, Japan",
-      price: 280,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1580156115310-62366b6bb998",
-      coordinates: [35.0116, 135.7681],
-    },
-  ];
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        setLoading(true);
+        const data = await hotelService.getAllHotels();
+        const formattedHotels = data.map(hotel => ({
+          id: hotel._id,
+          name: hotel.basicInfo.name,
+          location: `${hotel.location.city}, ${hotel.location.country}`,
+          price: hotel.rooms[0]?.pricePerNight || 0,
+          rating: hotel.basicInfo.stars,
+          image: hotel.basicInfo.images[0] || 'https://via.placeholder.com/300x200',
+          coordinates: hotel.location.coordinates
+        }));
+        setHotels(formattedHotels);
+      } catch (err) {
+        setError('Failed to fetch hotels');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotels();
+  }, []);
 
   const filteredHotels = hotels.filter(hotel =>
     hotel.location.toLowerCase().includes(destination.toLowerCase()) ||
     hotel.name.toLowerCase().includes(destination.toLowerCase())
   );
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
