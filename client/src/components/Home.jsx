@@ -133,7 +133,7 @@ const HomePage = () => {
         <p className="text-center text-blue-600 mb-12">Discover our most popular destinations</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featuredHotels.map((hotel) => (
-            <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group">
+            <Link to={`/hotel/${hotel.id}`} key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group">
               <div className="h-60 overflow-hidden relative">
                 <img
                   src={hotel.image}
@@ -157,7 +157,7 @@ const HomePage = () => {
                   View Details
                 </button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
