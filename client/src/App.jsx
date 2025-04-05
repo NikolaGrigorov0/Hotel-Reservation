@@ -6,6 +6,7 @@ import SearchBarWithMap from './components/SearchBarWithMap';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import { useAuth } from './auth/AuthContext';
+import HotelDetails from './components/HotelDetails';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -157,6 +158,7 @@ function App() {
           <Route path="/search" element={<SearchBarWithMap />} />
           <Route path="/signIn" element={<SignIn />} /> 
           <Route path="/signUp" element={<SignUp />} />
+          <Route path="/hotel/:id" element={<HotelDetails />} />
         </Routes>
       </main>
 

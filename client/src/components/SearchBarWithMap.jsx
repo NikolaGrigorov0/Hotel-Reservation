@@ -3,6 +3,7 @@ import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Link } from 'react-router-dom';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -110,14 +111,34 @@ const SearchResults = () => {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-2/3 space-y-6">
             {filteredHotels.map(hotel => (
-              <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden flex">
-                <img src={hotel.image} alt={hotel.name} className="w-1/3 object-cover" />
-                <div className="w-2/3 p-6">
-                  <h2 className="text-xl font-bold">{hotel.name}</h2>
-                  <p className="text-gray-600 my-2">{hotel.location}</p>
-                  <p className="text-2xl font-bold text-blue-600">${hotel.price} <span className="text-sm text-gray-500">/ night</span></p>
+              <Link
+              to={`/hotel/${hotel.id}`}
+              key={hotel.id}
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group block"
+            >
+              <div className="h-60 overflow-hidden relative">
+                <img
+                  src={hotel.image}
+                  alt={hotel.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                />
+                <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  ${hotel.price}/night
                 </div>
               </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-blue-900">{hotel.name}</h3>
+                  <div className="flex items-center bg-blue-100 px-2 py-1 rounded">
+                    ⭐ <span className="ml-1 font-medium text-blue-800">{hotel.rating}</span>
+                  </div>
+                </div>
+                <p className="text-blue-600 mb-4">{hotel.location}</p>
+                <button className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg font-medium transition duration-300">
+                  View Details
+                </button>
+              </div>
+            </Link>
             ))}
           </div>
           <div className="md:w-1/3 h-[500px] sticky top-24">
