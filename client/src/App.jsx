@@ -5,6 +5,7 @@ import HomePage from './components/Home';
 import SearchBarWithMap from './components/SearchBarWithMap';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
+import HotelsPage from './components/HotelsPage';
 import { useAuth } from './auth/AuthContext';
 import HotelDetails from './components/HotelDetails';
 
@@ -156,7 +157,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchBarWithMap />} />
-          <Route path="/signIn" element={<SignIn />} /> 
+          <Route path="/hotels" element={<HotelsPage />} />
+          <Route path="/signIn" element={<SignIn />} />
           <Route path="/signUp" element={<SignUp />} />
           <Route path="/hotel/:id" element={<HotelDetails />} />
         </Routes>
