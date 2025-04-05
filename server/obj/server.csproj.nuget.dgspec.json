@@ -1,28 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\bdemi\\OneDrive\\Desktop\\-\\Projects\\Hotel Reservations\\Hotel-Reservation\\server\\server.csproj": {}
+    "C:\\Users\\user\\Documents\\GitHub\\Hotel-Reservation\\server\\server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\bdemi\\OneDrive\\Desktop\\-\\Projects\\Hotel Reservations\\Hotel-Reservation\\server\\server.csproj": {
+    "C:\\Users\\user\\Documents\\GitHub\\Hotel-Reservation\\server\\server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\bdemi\\OneDrive\\Desktop\\-\\Projects\\Hotel Reservations\\Hotel-Reservation\\server\\server.csproj",
+        "projectUniqueName": "C:\\Users\\user\\Documents\\GitHub\\Hotel-Reservation\\server\\server.csproj",
         "projectName": "server",
-        "projectPath": "C:\\Users\\bdemi\\OneDrive\\Desktop\\-\\Projects\\Hotel Reservations\\Hotel-Reservation\\server\\server.csproj",
-        "packagesPath": "C:\\Users\\bdemi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\bdemi\\OneDrive\\Desktop\\-\\Projects\\Hotel Reservations\\Hotel-Reservation\\server\\obj\\",
+        "projectPath": "C:\\Users\\user\\Documents\\GitHub\\Hotel-Reservation\\server\\server.csproj",
+        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\user\\Documents\\GitHub\\Hotel-Reservation\\server\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\bdemi\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
