@@ -3,10 +3,14 @@ import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Check for token on initial load
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -14,15 +18,16 @@ export function AuthProvider({ children }) {
         const decoded = jwtDecode(token);
         setUser(decoded);
       } catch (error) {
-        console.error('Invalid token:', error);
-        logout();
+        console.error('Error decoding token:', error);
+        localStorage.removeItem('token');
       }
     }
+    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5088/api/auth/login', {
+      const response = await fetch('http://localhost:5088/api/Auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,26 +52,26 @@ export function AuthProvider({ children }) {
 
   const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:5088/api/auth/register', {
+      const response = await fetch('http://localhost:5088/api/Auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, email, password }),
       });
-  
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        throw new Error('Registration failed');
       }
-  
-      // Parse response only once
+
       const data = await response.json();
-      // Don't store token after registration, let them login instead
+      localStorage.setItem('token', data.token);
+      const decoded = jwtDecode(data.token);
+      setUser(decoded);
       return true;
     } catch (error) {
       console.error('Registration error:', error);
-      throw error;
+      return false;
     }
   };
 
@@ -75,13 +80,44 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUserFavorites = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:5088/api/User/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch user profile');
+
+      const userData = await response.json();
+      setUser(prevUser => ({
+        ...prevUser,
+        favorites: userData.favorites
+      }));
+    } catch (error) {
+      console.error('Error updating user favorites:', error);
+    }
+  };
+
+  const value = {
+    user,
+    login,
+    register,
+    logout,
+    updateUserFavorites
+  };
+
+  if (loading) {
+    return null;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

@@ -18,7 +18,7 @@ const HomePage = () => {
         setLoading(true);
         const data = await hotelService.getAllHotels();
         const formattedHotels = data.map(hotel => ({
-          id: hotel._id,
+          id: hotel._id || hotel.id,
           name: hotel.basicInfo.name,
           location: `${hotel.location.city}, ${hotel.location.country}`,
           price: hotel.rooms[0]?.pricePerNight || 0,
@@ -143,7 +143,11 @@ const HomePage = () => {
         <p className="text-center text-blue-600 mb-12">Discover our most popular destinations</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {filteredHotels.slice(0, 3).map((hotel) => (
-            <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group">
+            <Link 
+              to={`/hotel/${hotel.id}`}
+              key={hotel.id}
+              className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] group"
+            >
               <div className="h-60 overflow-hidden relative">
                 <img
                   src={hotel.image}
@@ -163,17 +167,11 @@ const HomePage = () => {
                   </div>
                 </div>
                 <p className="text-blue-600 mb-4">{hotel.location}</p>
-                <Link
-                  to={{
-                    pathname: "/search",
-                    search: `?destination=${encodeURIComponent(hotel.location)}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`
-                  }}
-                  className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg font-medium transition duration-300 block text-center"
-                >
+                <button className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-2 px-4 rounded-lg font-medium transition duration-300">
                   View Details
-                </Link>
+                </button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

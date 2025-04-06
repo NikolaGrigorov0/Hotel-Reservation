@@ -20,5 +20,9 @@ namespace HotelReservation.Models
 
         [BsonElement("passwordSalt")]
         public byte[] PasswordSalt { get; set; }
+        
+        [BsonElement("favorites")]
+        public List<string> Favorites { get; set; } = new List<string>();
+
     }
 }

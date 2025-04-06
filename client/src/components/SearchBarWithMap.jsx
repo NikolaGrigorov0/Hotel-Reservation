@@ -1,30 +1,21 @@
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
+import { FaSearch, FaCalendarAlt, FaUser, FaStar } from 'react-icons/fa';
 import { hotelService } from '../services/hotelService';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-const SearchResults = () => {
-  const location = useLocation();
+const SearchBarWithMap = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const searchParams = new URLSearchParams(location.search);
+  const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
+  const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
+  const [guests, setGuests] = useState(parseInt(searchParams.get('guests')) || 1);
+  const [destination, setDestination] = useState(searchParams.get('destination') || '');
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const destination = searchParams.get('destination') || '';
-  const checkIn = searchParams.get('checkIn') || '';
-  const checkOut = searchParams.get('checkOut') || '';
-  const guests = searchParams.get('guests') || '1';
 
   useEffect(() => {
     const fetchHotels = async () => {
@@ -32,13 +23,16 @@ const SearchResults = () => {
         setLoading(true);
         const data = await hotelService.getAllHotels();
         const formattedHotels = data.map(hotel => ({
-          id: hotel._id,
+          id: hotel._id || hotel.id,
           name: hotel.basicInfo.name,
           location: `${hotel.location.city}, ${hotel.location.country}`,
           price: hotel.rooms[0]?.pricePerNight || 0,
           rating: hotel.basicInfo.stars,
           image: hotel.basicInfo.images[0] || 'https://via.placeholder.com/300x200',
-          coordinates: hotel.location.coordinates
+          coordinates: hotel.location.coordinates,
+          city: hotel.location.city,
+          country: hotel.location.country,
+          rooms: hotel.rooms || []
         }));
         setHotels(formattedHotels);
       } catch (err) {
@@ -51,62 +45,142 @@ const SearchResults = () => {
 
     fetchHotels();
   }, []);
-  const staticHotels = [
-    {
-      id: 1,
-      name: "Dominion Hotel",
-      location: "New York, USA",
-      price: 250,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa",
-      coordinates: [40.7128, -74.0060],
-    },
-    {
-      id: 2,
-      name: "Tropical Paradise Resort",
-      location: "Bali, Indonesia",
-      price: 180,
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-      coordinates: [-8.4095, 115.1889],
-    },
-    {
-      id: 3,
-      name: "Mountain View Lodge",
-      location: "Swiss Alps, Switzerland",
-      price: 210,
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
-      coordinates: [46.8182, 8.2275],
-    }];
 
-  const filteredHotels = hotels.filter(hotel =>
-    hotel.location.toLowerCase().includes(destination.toLowerCase()) ||
-    hotel.name.toLowerCase().includes(destination.toLowerCase())
-  );
+  const filteredHotels = hotels.filter(hotel => {
+    // Search by name, city, or country
+    const searchTerm = destination.toLowerCase();
+    const matchesSearch = 
+      hotel.name.toLowerCase().includes(searchTerm) ||
+      hotel.city.toLowerCase().includes(searchTerm) ||
+      hotel.country.toLowerCase().includes(searchTerm);
+
+    // Check if dates are selected
+    const hasDates = checkIn && checkOut;
+    if (hasDates) {
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      
+      // Validate dates
+      if (checkInDate >= checkOutDate) {
+        return false; // Invalid date range
+      }
+
+      // Check if any room is available for the selected dates
+      const hasAvailableRoom = hotel.rooms.some(room => {
+        if (!room.available) return false;
+        
+        // Check if room can accommodate the number of guests
+        if (room.capacity < guests) return false;
+
+        // Here you would typically check the room's booking dates
+        // For now, we'll assume the room is available if it's marked as available
+        // and can accommodate the guests
+        return true;
+      });
+
+      if (!hasAvailableRoom) return false;
+    }
+
+    // Check room capacity
+    const hasSuitableRoom = hotel.rooms.some(room => 
+      room.capacity >= guests && room.available
+    );
+
+    return matchesSearch && hasSuitableRoom;
+  });
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold">Hotels in {destination || 'your destination'}</h1>
-        <p className="text-gray-600">{checkIn && checkOut ? `${new Date(checkIn).toLocaleDateString()} - ${new Date(checkOut).toLocaleDateString()} • ${guests} guest${guests > 1 ? 's' : ''}` : 'Select dates to see prices'}</p>
+      {/* Search Bar */}
+      <div className="bg-white shadow-md p-6 sticky top-0 z-50">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <label className="block text-sm font-medium text-blue-800 mb-1">Destination</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="Where are you going?"
+                  className="w-full p-3 pl-10 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50"
+                />
+                <FaSearch className="absolute left-3 top-3.5 text-blue-400" />
+              </div>
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium text-blue-800 mb-1">Check-in</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className="w-full p-3 pl-10 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50"
+                />
+                <FaCalendarAlt className="absolute left-3 top-3.5 text-blue-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-blue-800 mb-1">Check-out</label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={checkOut}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className="w-full p-3 pl-10 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50"
+                />
+                <FaCalendarAlt className="absolute left-3 top-3.5 text-blue-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-blue-800 mb-1">Guests</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  value={guests}
+                  onChange={(e) => setGuests(parseInt(e.target.value))}
+                  className="w-full p-3 pl-10 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50"
+                />
+                <FaUser className="absolute left-3 top-3.5 text-blue-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Results and Map */}
+      <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
+          {/* Hotels List */}
           <div className="md:w-2/3 space-y-6">
-            {filteredHotels.map(hotel => (
-              <div key={hotel.id} className="bg-white rounded-xl shadow-md overflow-hidden flex">
+            {filteredHotels.map((hotel) => (
+              <Link 
+                to={`/hotel/${hotel.id}`}
+                key={hotel.id} 
+                className="bg-white rounded-xl shadow-md overflow-hidden flex transition-transform duration-300 hover:scale-[1.02]"
+              >
                 <img src={hotel.image} alt={hotel.name} className="w-1/3 object-cover" />
                 <div className="w-2/3 p-6">
                   <h2 className="text-xl font-bold">{hotel.name}</h2>
                   <p className="text-gray-600 my-2">{hotel.location}</p>
                   <p className="text-2xl font-bold text-blue-600">${hotel.price} <span className="text-sm text-gray-500">/ night</span></p>
+                  <div className="flex items-center mt-2">
+                    <FaStar className="text-yellow-500 mr-1" />
+                    <span className="text-gray-600">{hotel.rating} stars</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
+
+          {/* Map */}
           <div className="md:w-1/3 h-[500px] sticky top-24">
             <MapContainer 
               center={filteredHotels.length ? filteredHotels[0].coordinates : [0, 0]} 
@@ -119,16 +193,25 @@ const SearchResults = () => {
               />
               {filteredHotels.map(hotel => (
                 <Marker 
-                key={hotel.id} 
-                position={hotel.coordinates} 
-                icon={L.divIcon({
-                  className: '',
-                  html: `<div class="bg-white bg-opacity-90 text-black py-2 rounded-lg text-sm font-semibold shadow-md">
-                    $${hotel.price}
-                  </div>`,
-                  iconSize: [60, 30],
-                  iconAnchor: [30, 15],
-                })}              
+                  key={hotel.id} 
+                  position={hotel.coordinates} 
+                  icon={L.divIcon({
+                    className: 'cursor-pointer',
+                    html: `<div class="bg-white bg-opacity-90 text-black py-2 rounded-lg text-sm font-semibold shadow-md cursor-pointer">
+                      $${hotel.price}
+                    </div>`,
+                    iconSize: [60, 30],
+                    iconAnchor: [30, 15],
+                  })}
+                  eventHandlers={{
+                    click: () => navigate(`/hotel/${hotel.id}`),
+                    mouseover: (e) => {
+                      e.target.openPopup();
+                    },
+                    mouseout: (e) => {
+                      e.target.closePopup();
+                    },
+                  }}
                 >
                   <Popup>
                     <div className="flex w-[320px] p-2">
@@ -137,8 +220,14 @@ const SearchResults = () => {
                         <p className="text-gray-600">{hotel.location}</p>
                         <p className="text-gray-800 mt-1 font-medium">Price: ${hotel.price}/night</p>
                         <p className="text-gray-800">Rating: {hotel.rating} ⭐</p>
+                        <button 
+                          onClick={() => navigate(`/hotel/${hotel.id}`)}
+                          className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                        >
+                          View Details
+                        </button>
                       </div>
-                      <img src={hotel.image} alt={hotel.name} className="w-[150px] h-[110px]  object-cover rounded-md"/>
+                      <img src={hotel.image} alt={hotel.name} className="w-[150px] h-[110px] object-cover rounded-md"/>
                     </div>
                   </Popup>
                 </Marker>
@@ -151,4 +240,4 @@ const SearchResults = () => {
   );
 };
 
-export default SearchResults;
+export default SearchBarWithMap;
