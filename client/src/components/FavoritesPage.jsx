@@ -1,19 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { hotelService } from '../services/hotelService';
 import { useAuth } from '../auth/AuthContext';
-
-// Fix for default marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
-});
 
 export default function FavoritesPage() {
   const [favoriteHotels, setFavoriteHotels] = useState([]);
@@ -56,8 +45,7 @@ export default function FavoritesPage() {
             },
             price: Math.min(...hotel.rooms.map(room => room.pricePerNight)),
             rating: hotel.basicInfo.stars,
-            image: hotel.basicInfo.images[0],
-            coordinates: hotel.location.coordinates
+            image: hotel.basicInfo.images[0]
           }));
 
         setFavoriteHotels(formattedHotels);
@@ -123,44 +111,9 @@ export default function FavoritesPage() {
     );
   }
 
-  const center = favoriteHotels[0]?.coordinates
-    ? [favoriteHotels[0].coordinates[1], favoriteHotels[0].coordinates[0]]
-    : [0, 0];
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Your Favorite Hotels</h1>
-
-      {/* Map */}
-      <div className="mb-8 h-[400px] rounded-lg overflow-hidden shadow-lg">
-        <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          {favoriteHotels.map(hotel => (
-            hotel.coordinates && (
-              <Marker
-                key={hotel.id}
-                position={[hotel.coordinates[1], hotel.coordinates[0]]}
-              >
-                <Popup>
-                  <div>
-                    <h3 className="font-bold">{hotel.name}</h3>
-                    <p>{hotel.location.city}, {hotel.location.country}</p>
-                    <Link
-                      to={`/hotel/${hotel.id}`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </Popup>
-              </Marker>
-            )
-          ))}
-        </MapContainer>
-      </div>
 
       {/* Hotel Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

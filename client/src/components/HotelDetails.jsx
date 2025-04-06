@@ -159,17 +159,27 @@ const HotelDetails = () => {
             <button
               onClick={handleFavoriteClick}
               disabled={isTogglingFavorite}
-              className={`p-3 rounded-full transition-all ${
-                isTogglingFavorite ? 'opacity-50 cursor-not-allowed' : ''
-              } ${
-                isFavorite 
-                  ? 'bg-red-500 text-white hover:bg-red-600' 
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`
+                absolute top-4 right-4 
+                p-3 rounded-full 
+                transform transition-all duration-300
+                hover:scale-110
+                ${isTogglingFavorite ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${isFavorite 
+                  ? 'bg-red-500 text-white hover:bg-red-600 hover:shadow-lg' 
+                  : 'bg-white text-gray-600 hover:bg-gray-100 hover:shadow-lg'
+                }
+              `}
+              title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <FaHeart className={`text-2xl ${isFavorite ? 'text-white' : 'text-gray-600'} ${
-                isTogglingFavorite ? 'animate-pulse' : ''
-              }`} />
+              <FaHeart 
+                className={`
+                  text-2xl transform transition-all duration-300
+                  ${isFavorite ? 'text-white scale-110' : 'text-gray-600'}
+                  ${isTogglingFavorite ? 'animate-pulse' : ''}
+                  hover:scale-110
+                `}
+              />
             </button>
           </div>
         </div>
@@ -177,14 +187,15 @@ const HotelDetails = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Hotel Info and Amenities */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Left Column - Hotel Info */}
-          <div className="md:col-span-2">
+          <div>
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <p className="text-gray-600 mb-6">{hotel.basicInfo.description}</p>
               
               <h2 className="text-2xl font-bold mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {hotel.basicInfo.amenities.map((amenity, index) => (
                   <div key={index} className="flex items-center text-gray-600">
                     <span className="mr-2">•</span>
@@ -193,8 +204,10 @@ const HotelDetails = () => {
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* Location Section */}
+          {/* Right Column - Location & Contact */}
+          <div>
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-2xl font-bold mb-4">Location & Contact</h2>
               <div className="space-y-4">
@@ -216,24 +229,34 @@ const HotelDetails = () => {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Right Column - Rooms */}
-          <div className="md:col-span-1">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-2xl font-bold mb-4">Available Rooms</h2>
-              <div className="space-y-4">
-                {hotel.rooms.map((room, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <h3 className="font-bold text-lg">{room.type}</h3>
-                    <p className="text-gray-600 mt-1">{room.description}</p>
-                    <div className="mt-2">
-                      <p className="text-gray-600">Capacity: {room.capacity} guests</p>
-                      <p className="text-blue-600 font-bold mt-1">${room.pricePerNight}/night</p>
-                    </div>
+        {/* Available Rooms Section */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-6">Available Rooms</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotel.rooms.map((room, index) => (
+              <div key={index} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                {/* Room Image */}
+                {room.images && room.images.length > 0 && (
+                  <div className="relative h-48">
+                    <img
+                      src={room.images[0]}
+                      alt={`${room.type} room`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ))}
+                )}
+                <div className="p-4">
+                  <h3 className="font-bold text-lg">{room.type}</h3>
+                  <p className="text-gray-600 mt-1">{room.description}</p>
+                  <div className="mt-2">
+                    <p className="text-gray-600">Capacity: {room.capacity} guests</p>
+                    <p className="text-blue-600 font-bold mt-1">${room.pricePerNight}/night</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

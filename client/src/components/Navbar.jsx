@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { FaHeart } from 'react-icons/fa';
+import { FaHeart, FaHotel, FaHome, FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -14,119 +15,119 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  const NavLink = ({ to, children, icon: Icon }) => (
+    <Link
+      to={to}
+      onClick={() => setIsMenuOpen(false)}
+      className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 ${
+        isActive(to)
+          ? 'bg-white text-blue-600 shadow-md transform scale-105'
+          : 'text-white hover:bg-blue-700 hover:text-white'
+      }`}
+    >
+      {Icon && <Icon className="mr-2" />}
+      {children}
+    </Link>
+  );
+
   return (
-    <nav className="bg-blue-800 text-white shadow-lg">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center">
-          {/* Logo/Brand */}
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold">HotelFinder</span>
+    <nav className="bg-gradient-to-r from-blue-800 to-blue-600 text-white shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2 text-2xl font-bold hover:text-blue-200 transition-colors"
+          >
+            <FaHotel className="text-3xl" />
+            <span>HotelFinder</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center">
-            {/* Centered navigation links */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 flex space-x-6">
-              <Link to="/" className="hover:text-blue-200 transition duration-300">
-                Home
-              </Link>
-              <Link to="/hotels" className="hover:text-blue-200 transition duration-300">
-                Hotels
-              </Link>
-              {user && (
-                <Link to="/favorites" className="hover:text-blue-200 transition duration-300 flex items-center">
-                  <FaHeart className="mr-1" />
-                  Favorites
-                </Link>
-              )}
-            </div>
+          <div className="hidden md:flex items-center space-x-4">
+            <NavLink to="/" icon={FaHome}>Home</NavLink>
+            <NavLink to="/hotels" icon={FaHotel}>Hotels</NavLink>
+            {user && (
+              <NavLink to="/favorites" icon={FaHeart}>Favorites</NavLink>
+            )}
+          </div>
 
-            {/* Right-aligned auth links */}
-            <div className="ml-auto flex space-x-6">
-              {user ? (
+          {/* Auth Section - Desktop */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
                 <button
                   onClick={handleLogout}
-                  className="hover:text-blue-200 transition duration-300"
+                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   Sign Out
                 </button>
-              ) : (
-                <>
-                  <Link to="/signIn" className="hover:text-blue-200 transition duration-300">
-                    Sign In
-                  </Link>
-                  <Link to="/signUp" className="bg-white text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-50 transition duration-300">
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white focus:outline-none"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 space-y-3">
-            <Link
-              to="/"
-              className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              to="/hotels"
-              className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Hotels
-            </Link>
-            {user && (
-              <Link
-                to="/favorites"
-                className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300 flex items-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <FaHeart className="mr-2" />
-                Favorites
-              </Link>
-            )}
-            {user ? (
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
-              >
-                Sign Out
-              </button>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/signIn"
-                  className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="text-white hover:text-blue-200 transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signUp"
-                  className="block hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
+                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none"
+          >
+            {isMenuOpen ? (
+              <FaTimes className="text-2xl" />
+            ) : (
+              <FaBars className="text-2xl" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 space-y-2 border-t border-blue-700">
+            <NavLink to="/" icon={FaHome}>Home</NavLink>
+            <NavLink to="/hotels" icon={FaHotel}>Hotels</NavLink>
+            {user && (
+              <NavLink to="/favorites" icon={FaHeart}>Favorites</NavLink>
+            )}
+            {user ? (
+              <>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-white hover:bg-blue-700 transition-colors rounded-lg"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/signIn"
                   onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-2 text-white hover:bg-blue-700 transition-colors rounded-lg"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signUp"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 transition-colors rounded-lg mx-4"
                 >
                   Sign Up
                 </Link>
