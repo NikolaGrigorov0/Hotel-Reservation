@@ -45,8 +45,7 @@ export default function SignUp() {
       );
       
       if (success) {
-        // Redirect to sign in page after successful registration
-        navigate('/signIn');
+        navigate('/');
       }
     } catch (err) {
       console.error('Registration error:', err);
