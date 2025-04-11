@@ -38,10 +38,8 @@ const HomePage = () => {
     fetchHotels();
   }, []);
 
-  const filteredHotels = hotels.filter(hotel =>
-    hotel.location.toLowerCase().includes(destination.toLowerCase()) ||
-    hotel.name.toLowerCase().includes(destination.toLowerCase())
-  );
+  // Get the first 3 hotels as featured hotels
+  const featuredHotels = hotels.slice(0, 3);
 
   const amenities = [
     { icon: <FaWifi className="text-2xl" />, name: "Free WiFi" },
@@ -55,7 +53,6 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Section */}
       <div className="relative h-[500px] bg-blue-800 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-blue-700/80"></div>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -66,7 +63,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="container mx-auto px-4 -mt-20 relative z-10">
         <div className="bg-white rounded-xl shadow-xl p-6 border border-blue-100">
           <h2 className="text-2xl font-bold text-blue-900 mb-6">Book your dream hotel</h2>
@@ -137,12 +133,11 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Featured Hotels */}
       <div className="container mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-4 text-blue-900">Featured Hotels</h2>
         <p className="text-center text-blue-600 mb-12">Discover our most popular destinations</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {filteredHotels.slice(0, 3).map((hotel) => (
+          {featuredHotels.map((hotel) => (
             <Link 
               to={`/hotel/${hotel.id}`}
               key={hotel.id}
@@ -176,7 +171,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Amenities Section */}
       <div className="bg-blue-800 py-16 text-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">Our Amenities</h2>
@@ -192,7 +186,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Call to Action */}
       <div className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready for an unforgettable experience?</h2>

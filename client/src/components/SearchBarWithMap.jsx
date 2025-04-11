@@ -47,41 +47,36 @@ const SearchBarWithMap = () => {
   }, []);
 
   const filteredHotels = hotels.filter(hotel => {
-    // Search by name, city, or country
+
     const searchTerm = destination.toLowerCase();
     const matchesSearch = 
       hotel.name.toLowerCase().includes(searchTerm) ||
       hotel.city.toLowerCase().includes(searchTerm) ||
       hotel.country.toLowerCase().includes(searchTerm);
 
-    // Check if dates are selected
+
     const hasDates = checkIn && checkOut;
     if (hasDates) {
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
       
-      // Validate dates
+ 
       if (checkInDate >= checkOutDate) {
-        return false; // Invalid date range
+        return false;
       }
 
-      // Check if any room is available for the selected dates
+     
       const hasAvailableRoom = hotel.rooms.some(room => {
         if (!room.available) return false;
         
-        // Check if room can accommodate the number of guests
         if (room.capacity < guests) return false;
 
-        // Here you would typically check the room's booking dates
-        // For now, we'll assume the room is available if it's marked as available
-        // and can accommodate the guests
         return true;
       });
 
       if (!hasAvailableRoom) return false;
     }
 
-    // Check room capacity
     const hasSuitableRoom = hotel.rooms.some(room => 
       room.capacity >= guests && room.available
     );
@@ -94,7 +89,6 @@ const SearchBarWithMap = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Search Bar */}
       <div className="bg-white shadow-md p-6 sticky top-0 z-50">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -155,10 +149,8 @@ const SearchBarWithMap = () => {
         </div>
       </div>
 
-      {/* Results and Map */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Hotels List */}
           <div className="md:w-2/3 space-y-6">
             {filteredHotels.map((hotel) => (
               <Link 
@@ -180,7 +172,6 @@ const SearchBarWithMap = () => {
             ))}
           </div>
 
-          {/* Map */}
           <div className="md:w-1/3 h-[500px] sticky top-24">
             <MapContainer 
               center={filteredHotels.length ? filteredHotels[0].coordinates : [0, 0]} 

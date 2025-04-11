@@ -18,12 +18,10 @@ namespace HotelReservation.Controllers
             var database = mongoClient.GetDatabase("hotelReservationDB");
             _hotels = database.GetCollection<Hotel>("hotels");
 
-            // Create geospatial index if it doesn't exist
             var indexKeysDefinition = Builders<Hotel>.IndexKeys.Geo2DSphere(h => h.Location.Coordinates);
             _hotels.Indexes.CreateOne(new CreateIndexModel<Hotel>(indexKeysDefinition));
         }
 
-        // GET: api/hotel
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Hotel>>> GetAllHotels()
         {
@@ -31,7 +29,6 @@ namespace HotelReservation.Controllers
             return Ok(hotels);
         }
 
-        // GET: api/hotel/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<Hotel>> GetHotel(string id)
         {
@@ -43,7 +40,6 @@ namespace HotelReservation.Controllers
             return Ok(hotel);
         }
 
-        // POST: api/hotel
         [HttpPost]
         public async Task<ActionResult<Hotel>> CreateHotel([FromBody] Hotel hotel)
         {
@@ -51,7 +47,6 @@ namespace HotelReservation.Controllers
             return CreatedAtAction(nameof(GetHotel), new { id = hotel.Id }, hotel);
         }
 
-        // PUT: api/hotel/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateHotel(string id, [FromBody] Hotel updatedHotel)
         {
@@ -66,7 +61,6 @@ namespace HotelReservation.Controllers
             return NoContent();
         }
 
-        // DELETE: api/hotel/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHotel(string id)
         {
@@ -80,7 +74,6 @@ namespace HotelReservation.Controllers
             return NoContent();
         }
 
-        // GET: api/hotel/search?city={city}
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<Hotel>>> SearchHotels([FromQuery] string city)
         {
@@ -89,17 +82,5 @@ namespace HotelReservation.Controllers
             return Ok(hotels);
         }
 
-        // GET: api/hotel/nearby?longitude={longitude}&latitude={latitude}&maxDistance={maxDistance}
-        [HttpGet("nearby")]
-        public async Task<ActionResult<IEnumerable<Hotel>>> GetNearbyHotels(
-            [FromQuery] double longitude,
-            [FromQuery] double latitude,
-            [FromQuery] double maxDistance = 5000) // Default 5km
-        {
-            var point = new GeoJsonPoint<GeoJson2DCoordinates>(new GeoJson2DCoordinates(longitude, latitude));
-            var filter = Builders<Hotel>.Filter.NearSphere(h => h.Location.Coordinates, point, maxDistance);
-            var hotels = await _hotels.Find(filter).ToListAsync();
-            return Ok(hotels);
-        }
     }
 } 
