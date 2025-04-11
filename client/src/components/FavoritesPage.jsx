@@ -22,18 +22,15 @@ export default function FavoritesPage() {
         setLoading(true);
         setError(null);
 
-        // Check if user has favorites
         if (!user.favorites || user.favorites.length === 0) {
           setFavoriteHotels([]);
           setLoading(false);
           return;
         }
 
-        // Fetch all favorite hotels based on user's favorite IDs
         const hotelPromises = user.favorites.map(id => hotelService.getHotelById(id));
         const hotelsData = await Promise.all(hotelPromises);
 
-        // Format hotel data
         const formattedHotels = hotelsData
           .filter(hotel => hotel) // Filter out any null responses
           .map(hotel => ({
@@ -56,8 +53,6 @@ export default function FavoritesPage() {
         setLoading(false);
       }
     };
-
-    // Only fetch if we have a user
     if (user) {
       fetchFavoriteHotels();
     }
@@ -114,8 +109,6 @@ export default function FavoritesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Your Favorite Hotels</h1>
-
-      {/* Hotel Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {favoriteHotels.map(hotel => (
           <Link

@@ -38,7 +38,6 @@ const Navbar = () => {
     <nav className="bg-gradient-to-r from-blue-800 to-blue-600 text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link 
             to="/" 
             className="flex items-center space-x-2 text-2xl font-bold hover:text-blue-200 transition-colors"
@@ -47,7 +46,6 @@ const Navbar = () => {
             <span>HotelFinder</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <NavLink to="/" icon={FaHome}>Home</NavLink>
             <NavLink to="/hotels" icon={FaHotel}>Hotels</NavLink>
@@ -56,7 +54,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Auth Section - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
@@ -85,7 +82,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none"
@@ -98,7 +94,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-blue-700">
             <NavLink to="/" icon={FaHome}>Home</NavLink>

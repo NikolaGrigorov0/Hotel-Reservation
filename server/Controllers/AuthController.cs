@@ -44,7 +44,6 @@ namespace HotelReservation.Controllers
 
             await _users.InsertOneAsync(user);
 
-            // Generate token for the newly registered user, just like login
             string token = CreateToken(user);
 
             return Ok(new { token });

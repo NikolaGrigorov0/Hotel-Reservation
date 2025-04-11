@@ -22,7 +22,6 @@ const HotelDetails = () => {
         setLoading(true);
         const data = await hotelService.getHotelById(id);
         setHotel(data);
-        // Check if hotel is in user's favorites
         if (user?.favorites) {
           setIsFavorite(user.favorites.includes(id));
         }
@@ -44,7 +43,7 @@ const HotelDetails = () => {
 
   const handleFavoriteClick = async () => {
     if (!user) {
-      navigate('/signIn', { state: { from: `/hotel/${id}` } });
+      showFeedback('Please sign in to add hotels to your favorites', true);
       return;
     }
 
@@ -52,10 +51,8 @@ const HotelDetails = () => {
       setIsTogglingFavorite(true);
       await hotelService.toggleFavorite(id);
       
-      // Update user favorites in context
       await updateUserFavorites();
       
-      // Toggle local state
       setIsFavorite(!isFavorite);
       
       showFeedback(
@@ -102,7 +99,6 @@ const HotelDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Feedback Message */}
       {feedbackMessage && (
         <div
           className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
@@ -113,7 +109,7 @@ const HotelDetails = () => {
         </div>
       )}
 
-      {/* Hero Section with Image Carousel */}
+
       <div className="relative h-[600px] bg-black">
         <div className="absolute inset-0 flex items-center justify-center">
           <img
@@ -123,30 +119,33 @@ const HotelDetails = () => {
           />
         </div>
 
-        {/* Navigation Arrows */}
         {hotel.basicInfo.images.length > 1 && (
           <>
             <button
               onClick={prevImage}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-3 rounded-full hover:bg-opacity-75 transition-all"
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-3 rounded-full 
+                hover:bg-opacity-75 hover:scale-110 hover:shadow-lg 
+                transition-all duration-300 ease-in-out
+                group"
             >
-              <FaChevronLeft className="text-2xl text-black" />
+              <FaChevronLeft className="text-2xl text-black group-hover:text-blue-600 transition-colors duration-300" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-3 rounded-full hover:bg-opacity-75 transition-all"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-3 rounded-full 
+                hover:bg-opacity-75 hover:scale-110 hover:shadow-lg 
+                transition-all duration-300 ease-in-out
+                group"
             >
-              <FaChevronRight className="text-2xl text-black" />
+              <FaChevronRight className="text-2xl text-black group-hover:text-blue-600 transition-colors duration-300" />
             </button>
           </>
         )}
 
-        {/* Image Counter */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 px-4 py-2 rounded-full text-white">
           {currentImageIndex + 1} / {hotel.basicInfo.images.length}
         </div>
 
-        {/* Hotel Name and Favorite Button */}
         <div className="absolute top-0 left-0 right-0 p-8 bg-gradient-to-b from-black to-transparent">
           <div className="flex justify-between items-start">
             <div>
@@ -185,11 +184,8 @@ const HotelDetails = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Hotel Info and Amenities */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          {/* Left Column - Hotel Info */}
           <div>
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
               <p className="text-gray-600 mb-6">{hotel.basicInfo.description}</p>
@@ -206,7 +202,6 @@ const HotelDetails = () => {
             </div>
           </div>
 
-          {/* Right Column - Location & Contact */}
           <div>
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-2xl font-bold mb-4">Location & Contact</h2>
@@ -231,13 +226,11 @@ const HotelDetails = () => {
           </div>
         </div>
 
-        {/* Available Rooms Section */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-2xl font-bold mb-6">Available Rooms</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {hotel.rooms.map((room, index) => (
               <div key={index} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                {/* Room Image */}
                 {room.images && room.images.length > 0 && (
                   <div className="relative h-48">
                     <img
