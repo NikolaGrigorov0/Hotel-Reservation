@@ -1,39 +1,94 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaExclamationCircle } from 'react-icons/fa';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+    submit: ''
+  });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      email: '',
+      password: '',
+      submit: ''
+    };
+
+    let isValid = true;
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     try {
-      setError('');
       setLoading(true);
       const success = await login(formData.email, formData.password);
       if (success) {
         navigate('/');
       } else {
-        setError('Invalid email or password');
+        setErrors(prev => ({
+          ...prev,
+          submit: 'Invalid email or password'
+        }));
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Failed to sign in. Please try again.');
+      setErrors(prev => ({
+        ...prev,
+        submit: 'Failed to sign in. Please try again.'
+      }));
     } finally {
       setLoading(false);
     }
@@ -43,7 +98,12 @@ export default function SignIn() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
         <h2 className="text-2xl font-bold text-center">Sign In</h2>
-        {error && <div className="p-4 text-red-500 bg-red-50 rounded">{error}</div>}
+        {errors.submit && (
+          <div className="p-4 text-red-500 bg-red-50 rounded flex items-center">
+            <FaExclamationCircle className="mr-2" />
+            {errors.submit}
+          </div>
+        )}
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
@@ -57,13 +117,20 @@ export default function SignIn() {
               <input
                 id="email"
                 name="email"
-                type="email"
-                required
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                type="text"
+                className={`w-full py-2 pl-10 pr-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
                 value={formData.email}
                 onChange={handleChange}
               />
             </div>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <FaExclamationCircle className="mr-1" />
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div>
@@ -78,18 +145,26 @@ export default function SignIn() {
                 id="password"
                 name="password"
                 type="password"
-                required
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full py-2 pl-10 pr-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <FaExclamationCircle className="mr-1" />
+                {errors.password}
+              </p>
+            )}
           </div>
+
           <button
             type="submit"
             disabled={loading}
             className={`w-full px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {loading ? 'Signing In...' : 'Sign In'}
