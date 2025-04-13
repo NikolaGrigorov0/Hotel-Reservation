@@ -24,5 +24,7 @@ namespace HotelReservation.Models
         [BsonElement("favorites")]
         public List<string> Favorites { get; set; } = new List<string>();
 
+        [BsonElement("isAdmin")]
+        public bool IsAdmin { get; set; } = false;
     }
 }

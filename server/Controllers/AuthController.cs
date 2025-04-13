@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using HotelReservation.Models;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelReservation.Controllers
 {
@@ -18,12 +20,14 @@ namespace HotelReservation.Controllers
     {
         private readonly IMongoCollection<User> _users;
         private readonly IConfiguration _configuration;
+        private readonly IMongoCollection<Favorite> _favoritesCollection;
 
         public AuthController(IMongoClient mongoClient, IConfiguration configuration)
         {
             var database = mongoClient.GetDatabase("hotelReservationDB");
             _users = database.GetCollection<User>("users");
             _configuration = configuration;
+            _favoritesCollection = database.GetCollection<Favorite>("favorites");
         }
 
         [HttpPost("register")]
@@ -61,7 +65,37 @@ namespace HotelReservation.Controllers
 
             string token = CreateToken(user);
 
-            return Ok(new { token });
+            return Ok(new { 
+                token,
+                username = user.Username,
+                email = user.Email,
+                isAdmin = user.IsAdmin
+            });
+        }
+
+        [HttpDelete("delete")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser([FromBody] DeleteUserRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            if (user.Username != request.Username)
+            {
+                return BadRequest("Invalid username");
+            }
+
+            await _users.DeleteOneAsync(u => u.Id == userId);
+            return Ok(new { message = "User deleted successfully" });
         }
 
         private string CreateToken(User user)
@@ -69,7 +103,8 @@ namespace HotelReservation.Controllers
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
@@ -105,6 +140,84 @@ namespace HotelReservation.Controllers
                 return computedHash.SequenceEqual(passwordHash);
             }
         }
+
+        [HttpPost("create-admin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateAdmin(UserRegisterDto request)
+        {
+            if (await _users.Find(u => u.Email == request.Email).AnyAsync())
+                return BadRequest(new { message = "User already exists." });
+
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            var user = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                IsAdmin = true
+            };
+
+            await _users.InsertOneAsync(user);
+
+            string token = CreateToken(user);
+
+            return Ok(new { token });
+        }
+
+        [HttpPost("setup-admin")]
+        public async Task<IActionResult> SetupAdmin(UserRegisterDto request)
+        {
+            // Check if any admin exists
+            if (await _users.Find(u => u.IsAdmin).AnyAsync())
+            {
+                return BadRequest(new { message = "Admin account already exists." });
+            }
+
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            var user = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                IsAdmin = true
+            };
+
+            await _users.InsertOneAsync(user);
+
+            string token = CreateToken(user);
+
+            return Ok(new { token });
+        }
+
+        [HttpPost("force-create-admin")]
+        public async Task<IActionResult> ForceCreateAdmin(UserRegisterDto request)
+        {
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            var user = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                IsAdmin = true
+            };
+
+            await _users.InsertOneAsync(user);
+
+            string token = CreateToken(user);
+
+            return Ok(new { 
+                token,
+                username = user.Username,
+                email = user.Email,
+                isAdmin = user.IsAdmin
+            });
+        }
     }
 
     public class UserRegisterDto
@@ -118,5 +231,11 @@ namespace HotelReservation.Controllers
     {
         public string Email { get; set; }
         public string Password { get; set; }
+    }
+
+    public class DeleteUserRequest
+    {
+        [Required]
+        public string Username { get; set; }
     }
 }

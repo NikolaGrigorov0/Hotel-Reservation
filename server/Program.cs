@@ -18,7 +18,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Reservation API", Version = "v1" });
-    
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme",
@@ -27,7 +27,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -45,7 +45,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var mongoDbSettings = builder.Configuration.GetSection("MongoDbSettings");
-builder.Services.AddSingleton<IMongoClient>(serviceProvider => 
+builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
 {
     var connectionString = mongoDbSettings["ConnectionString"];
     if (string.IsNullOrEmpty(connectionString))
@@ -85,7 +85,7 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
-    
+
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -104,7 +104,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy", policy =>
     {
         var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
-        
+
         if (builder.Environment.IsDevelopment())
         {
             policy.AllowAnyOrigin()
@@ -125,7 +125,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => 
+    app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotel Reservation API v1");
     });

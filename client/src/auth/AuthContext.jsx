@@ -13,14 +13,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser(decoded);
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        localStorage.removeItem('token');
-      }
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('email');
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    
+    if (token && username) {
+      setUser({
+        token,
+        username,
+        email,
+        isAdmin
+      });
     }
     setLoading(false);
   }, []);
@@ -40,9 +43,21 @@ export function AuthProvider({ children }) {
       }
 
       const data = await response.json();
+      
+      // Store all user data in localStorage
       localStorage.setItem('token', data.token);
-      const decoded = jwtDecode(data.token);
-      setUser(decoded);
+      localStorage.setItem('username', data.username);
+      localStorage.setItem('email', data.email);
+      localStorage.setItem('isAdmin', data.isAdmin.toString());
+
+      // Set user state with all data
+      setUser({
+        token: data.token,
+        username: data.username,
+        email: data.email,
+        isAdmin: data.isAdmin
+      });
+
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -65,9 +80,19 @@ export function AuthProvider({ children }) {
       }
 
       const data = await response.json();
+      
       localStorage.setItem('token', data.token);
-      const decoded = jwtDecode(data.token);
-      setUser(decoded);
+      localStorage.setItem('username', username);
+      localStorage.setItem('email', email);
+      localStorage.setItem('isAdmin', 'false');
+
+      setUser({
+        token: data.token,
+        username,
+        email,
+        isAdmin: false
+      });
+
       return true;
     } catch (error) {
       console.error('Registration error:', error);
@@ -77,6 +102,9 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('email');
+    localStorage.removeItem('isAdmin');
     setUser(null);
   };
 
@@ -106,18 +134,15 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     login,
-    register,
     logout,
-    updateUserFavorites
+    register,
+    updateUserFavorites,
+    loading
   };
-
-  if (loading) {
-    return null;
-  }
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
