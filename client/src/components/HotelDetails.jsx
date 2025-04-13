@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaChevronLeft, FaChevronRight, FaHeart } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaPhone, FaEnvelope, FaChevronLeft, FaChevronRight, FaHeart, FaCalendarAlt, FaUser } from 'react-icons/fa';
 import { hotelService } from '../services/hotelService';
 import { useAuth } from '../auth/AuthContext';
 
@@ -15,6 +15,15 @@ const HotelDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState({
+    checkIn: '',
+    checkOut: '',
+    guests: 1
+  });
+  const [bookingError, setBookingError] = useState(null);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -77,6 +86,90 @@ const HotelDetails = () => {
     setCurrentImageIndex((prevIndex) => 
       prevIndex === 0 ? hotel.basicInfo.images.length - 1 : prevIndex - 1
     );
+  };
+
+  const handleBookNow = (room) => {
+    if (!user) {
+      showFeedback('Please sign in to book a room', true);
+      navigate('/signin');
+      return;
+    }
+    setSelectedRoom(room);
+    setShowBookingModal(true);
+  };
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    setBookingError(null);
+    setIsBooking(true);
+
+    try {
+      // Validate dates
+      const checkInDate = new Date(bookingDetails.checkIn);
+      const checkOutDate = new Date(bookingDetails.checkOut);
+      
+      if (checkInDate >= checkOutDate) {
+        throw new Error('Check-out date must be after check-in date');
+      }
+
+      if (checkInDate < new Date()) {
+        throw new Error('Check-in date cannot be in the past');
+      }
+
+      if (bookingDetails.guests > selectedRoom.capacity) {
+        throw new Error(`This room can only accommodate ${selectedRoom.capacity} guests`);
+      }
+
+      // Calculate total price
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      const totalPrice = nights * selectedRoom.pricePerNight;
+
+      // Format dates to ISO string and remove time portion
+      const formattedCheckIn = checkInDate.toISOString().split('T')[0];
+      const formattedCheckOut = checkOutDate.toISOString().split('T')[0];
+
+      // Make API call to create booking
+      const response = await fetch('http://localhost:5088/api/Booking', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          hotelId: hotel.id,
+          roomId: selectedRoom.id,
+          checkIn: formattedCheckIn,
+          checkOut: formattedCheckOut,
+          guests: bookingDetails.guests,
+          totalPrice: parseFloat(totalPrice.toFixed(2)) // Ensure price is a number with 2 decimal places
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create booking');
+      }
+
+      const data = await response.json();
+
+      // Show success message
+      showFeedback('Booking confirmed successfully!', false);
+      setShowBookingModal(false);
+      
+      // Reset booking form
+      setBookingDetails({
+        checkIn: '',
+        checkOut: '',
+        guests: 1
+      });
+      setSelectedRoom(null);
+
+    } catch (error) {
+      console.error('Booking error:', error);
+      setBookingError(error.message);
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   if (loading) {
@@ -247,12 +340,156 @@ const HotelDetails = () => {
                     <p className="text-gray-600">Capacity: {room.capacity} guests</p>
                     <p className="text-blue-600 font-bold mt-1">${room.pricePerNight}/night</p>
                   </div>
+                  <button
+                    onClick={() => handleBookNow(room)}
+                    disabled={!room.available}
+                    className={`mt-4 w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                      room.available
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {room.available ? 'Book Now' : 'Not Available'}
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold">Book Room</h3>
+              <button
+                onClick={() => setShowBookingModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+
+            {bookingError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg">
+                {bookingError}
+              </div>
+            )}
+
+            <form onSubmit={handleBookingSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-in Date
+                </label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="date"
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    value={bookingDetails.checkIn}
+                    onChange={(e) => setBookingDetails(prev => ({
+                      ...prev,
+                      checkIn: e.target.value
+                    }))}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-out Date
+                </label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="date"
+                    required
+                    min={bookingDetails.checkIn || new Date().toISOString().split('T')[0]}
+                    value={bookingDetails.checkOut}
+                    onChange={(e) => setBookingDetails(prev => ({
+                      ...prev,
+                      checkOut: e.target.value
+                    }))}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Number of Guests
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    max={selectedRoom?.capacity || 1}
+                    value={bookingDetails.guests}
+                    onChange={(e) => setBookingDetails(prev => ({
+                      ...prev,
+                      guests: parseInt(e.target.value)
+                    }))}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Maximum capacity: {selectedRoom?.capacity} guests
+                </p>
+              </div>
+
+              {bookingDetails.checkIn && bookingDetails.checkOut && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Booking Summary</h4>
+                  <div className="space-y-2 text-sm">
+                    <p>Room Type: {selectedRoom?.type}</p>
+                    <p>Price per night: ${selectedRoom?.pricePerNight}</p>
+                    <p>Number of nights: {
+                      Math.ceil(
+                        (new Date(bookingDetails.checkOut) - new Date(bookingDetails.checkIn)) / 
+                        (1000 * 60 * 60 * 24)
+                      )
+                    }</p>
+                    <p className="font-bold">
+                      Total Price: ${
+                        selectedRoom?.pricePerNight * 
+                        Math.ceil(
+                          (new Date(bookingDetails.checkOut) - new Date(bookingDetails.checkIn)) / 
+                          (1000 * 60 * 60 * 24)
+                        )
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowBookingModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isBooking}
+                  className={`px-4 py-2 bg-blue-600 text-white rounded-lg font-medium ${
+                    isBooking ? 'opacity-75 cursor-not-allowed' : 'hover:bg-blue-700'
+                  }`}
+                >
+                  {isBooking ? 'Confirming...' : 'Confirm Booking'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

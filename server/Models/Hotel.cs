@@ -10,19 +10,15 @@ namespace HotelReservation.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
-        // Basic Information
         [BsonElement("basicInfo")]
         public BasicInfo BasicInfo { get; set; }
 
-        // Location Information
         [BsonElement("location")]
         public Location Location { get; set; }
 
-        // Contact Information
         [BsonElement("contact")]
         public Contact Contact { get; set; }
 
-        // Room Information
         [BsonElement("rooms")]
         public List<Room> Rooms { get; set; }
     }
@@ -74,6 +70,10 @@ namespace HotelReservation.Models
 
     public class Room
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+
         [BsonElement("type")]
         public string Type { get; set; }
 

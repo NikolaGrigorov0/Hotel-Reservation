@@ -52,6 +52,7 @@ const Navbar = () => {
             {user && (
               <NavLink to="/favorites" icon={FaHeart}>Favorites</NavLink>
             )}
+            {user?.isAdmin && <NavLink to="/admin" icon={FaHotel}>Admin Panel</NavLink>}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -101,6 +102,7 @@ const Navbar = () => {
             {user && (
               <NavLink to="/favorites" icon={FaHeart}>Favorites</NavLink>
             )}
+            {user?.isAdmin && <NavLink to="/admin" icon={FaHotel}>Admin Panel</NavLink>}
             {user ? (
               <>
                 <button
